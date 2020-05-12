@@ -1,0 +1,166 @@
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.net.UnknownHostException;
+import java.util.StringTokenizer;
+
+public class ServerGUI {
+    private JPanel panel1;
+    private JLabel labelServerLogs;
+    private JTextArea textAreaServerLogs;
+    private JLabel labelServer;
+    private JLabel labelServerIp;
+    private JLabel labelPort;
+    private JSpinner spinnerPort;
+    private JTextField textFieldServerIp;
+    private JButton startServerButton;
+    private JButton turnOffServerButton;
+    private JLabel labelAU;
+    private JList listCU;
+    private JButton kickOutUserButton;
+    /////////////////////////////////////////
+
+    private static Server server;
+    private int selectedUser;
+
+    DefaultListModel<String> defaultListModel = new DefaultListModel<>();
+
+    int lowerLimitPort = 49152;
+    int upperLimitPort = 50000;
+
+    public ServerGUI() throws UnknownHostException {
+        server = new Server();
+
+        Timer timer = new Timer(100, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                odswiez();
+            }
+        });
+        timer.start();
+
+
+        PrintStream printStream = new PrintStream(new CustomOutputStream(textAreaServerLogs));
+        System.setOut(printStream);
+        //System.setErr(printStream); errors to console
+
+        textFieldServerIp.setEditable(false);
+        textFieldServerIp.setText(server.serverIP);
+        textAreaServerLogs.setEditable(false);
+
+        textAreaServerLogs.setWrapStyleWord(true);
+
+        SpinnerNumberModel spinnerNumberModel = new SpinnerNumberModel(49500,lowerLimitPort,upperLimitPort,1);
+        spinnerPort.setModel(spinnerNumberModel);
+
+        startServerButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int serverPort = (int) spinnerPort.getValue();
+                try {
+                    server.startServer(serverPort);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        turnOffServerButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    server.stopServer();
+                } catch (IOException ex) {
+                    System.out.println("Error while turning of server.");
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        kickOutUserButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    if(selectedUser!=0){
+                        server.kickOutUser(selectedUser);
+                    }else {
+                        System.out.println("You did not selected user.");
+                    }
+                } catch (IOException ex) {
+                    System.out.println("Error while kicking out user.");
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+
+    }
+
+    public void enableComponents(){
+        boolean ifServerRunning = server.isRunning;
+
+        //enable if server is Running
+        turnOffServerButton.setEnabled(ifServerRunning);
+        listCU.setEnabled(ifServerRunning);
+        //disable if server is Running
+        spinnerPort.setEnabled(!ifServerRunning);
+        startServerButton.setEnabled(!ifServerRunning);
+    }
+
+    public void odswiez(){
+        enableComponents();
+
+        defaultListModel.clear();
+        for (int cNr: server.clientHandlersHM.keySet()){
+            if (server.clientNamesHM.containsKey(cNr)){
+                defaultListModel.addElement(cNr + " : " + server.clientNamesHM.get(cNr));
+            }else {
+                defaultListModel.addElement(cNr + " :  <not_setted>" );
+            }
+        }
+
+        if (listCU.isSelectionEmpty()){
+            selectedUser = 0;
+        }else {
+            StringTokenizer tmpSt = new StringTokenizer((String) listCU.getSelectedValue(), " : ");
+            selectedUser = Integer.parseInt(tmpSt.nextToken());
+        }
+
+        if(textAreaServerLogs.getText().length()>0) {
+            textAreaServerLogs.setCaretPosition(textAreaServerLogs.getText().length() - 1); ///auto scrolling
+        }
+
+    }
+
+    public static void main(String[] args) throws IOException {
+        JFrame frame = new JFrame("ServerGUI");
+        frame.setContentPane(new ServerGUI().panel1);
+        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        frame.pack();
+        frame.setVisible(true);
+
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                if(server.isRunning){
+                    if (JOptionPane.showConfirmDialog(frame,"Are you sure?") == JOptionPane.OK_OPTION) {
+                        //serverClosing();
+                        try {
+                            server.stopServer();
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
+                        System.exit(0);
+                    }
+                }else {
+                    System.exit(0);
+                }
+            }
+        });
+    }
+
+}

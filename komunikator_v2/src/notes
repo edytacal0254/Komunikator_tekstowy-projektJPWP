@@ -1,0 +1,36 @@
+----------------------------ToDo------------------------------
+Rewrite Client [ALL]
+Testing
+
+---------------------------CLASSES-----------------------------
+ServerSide classes:
+-Server
+-ClientHandler
+-AcceptingConnections
+-ServerGUI [java and form]
+
+ClientSide classes:
+-Client
+-ClientGUI [java and form]
+
+-----------------------------TAGS-------------------------------
+<SERVER_MSG> usual msg but from server
+<SERVER> msg sterująvy!!!
+
+----Tags from server [sending]
+<SERVER_MSG>
+<USER_LIST>
+<KICKED_OUT>
+<SERVER_CLOSED>
+
+----Tags in clientHandler [read => send response]
+
+<C_NAME> => <SERVER_C_NAME>&" + "Name already taken"
+         => <SERVER_C_NAME>&" + "Name Accepted"
+            broadcast(<SERVER_MSG>)
+<MSG> => <MSG>
+      => broadcast(<MSG>)
+<LOGOUT>  => broadcast(<SERVER_MSG>)
+
+----Tags from client
+

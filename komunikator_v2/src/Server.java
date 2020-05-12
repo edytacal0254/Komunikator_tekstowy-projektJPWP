@@ -1,0 +1,88 @@
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+
+public class Server extends Thread{
+    String serverIP;
+    InetAddress inetAddress;
+    private byte[] oktetyIP;
+    boolean isRunning;
+    ServerSocket ss;
+    Socket s;
+    int serverPort;
+
+    AcceptingConnections acceptingConnections;
+
+    public static HashMap<Integer,String> clientNamesHM;
+    public static HashMap<Integer, ClientHandler> clientHandlersHM;
+
+    int clientNr = 1; //jak zero to ALL
+
+    public Server() throws UnknownHostException {
+        this.isRunning = false;
+        this.s = new Socket();
+        clientNamesHM = new HashMap<>();
+        clientHandlersHM = new HashMap<>();
+        this.oktetyIP = InetAddress.getLocalHost().getAddress();
+        this.inetAddress = InetAddress.getByAddress(new byte[]{ oktetyIP[0],oktetyIP[1], oktetyIP[2], oktetyIP[3]});
+        this.serverIP = inetAddress.toString().substring(1);
+    }
+
+
+    public void startServer(int serverPortVar) throws IOException {
+        this.serverPort = serverPortVar;
+        ss = new ServerSocket(serverPort);
+        acceptingConnections = new AcceptingConnections(this);
+        acceptingConnections.start();
+        this.isRunning = true;
+        System.out.println("Server started.");
+    }
+
+    public void stopServer() throws IOException {
+        this.isRunning = false;
+        System.out.println("Accepting connections interrupted");
+        for(int clientNumber : clientHandlersHM.keySet()){
+            clientHandlersHM.get(clientNumber).getDos().writeUTF("<SERVER_CLOSED>");
+            clientHandlersHM.get(clientNumber).disconnectUser();
+        }
+        acceptingConnections.interrupt();
+        ss.close();
+        System.out.println("Server stopped.");
+    }
+
+    public void broadcast(String what) throws IOException {
+        for (int currentClient : Server.clientHandlersHM.keySet()) {
+            Server.clientHandlersHM.get(currentClient).getDos().writeUTF(what);
+        }
+    }
+
+    public void sendUserList() throws IOException {
+        StringBuilder userListS = new StringBuilder();
+
+        if (!clientNamesHM.isEmpty()) {
+            for (Integer clientNumber : clientNamesHM.keySet()) {
+                String user = clientNumber + "=" + Server.clientNamesHM.get(clientNumber) + ";";
+                userListS.append(user);
+            }
+            userListS.setLength(userListS.length() - 1); //usuwanie zbędnego delimitera
+            broadcast("<USER_LIST>&" + userListS.toString());
+        }
+    }
+
+    public void kickOutUser(int clientNumber) throws IOException {
+        clientHandlersHM.get(clientNumber).getDos().writeUTF("<KICKED_OUT>");
+        clientHandlersHM.get(clientNumber).disconnectUser();
+        System.out.println("Client nr.: " + clientNumber + " was kicked out of server.");
+        if(!clientNamesHM.get(clientNumber).isEmpty()) {
+            broadcast("<SERVER_MSG>&" + clientNamesHM.get(clientNumber) + " was kicked out of server.");
+        }
+    }
+
+
+
+}
