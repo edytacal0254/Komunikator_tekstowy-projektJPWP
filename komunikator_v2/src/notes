@@ -8,10 +8,12 @@ ServerSide classes:
 -ClientHandler
 -AcceptingConnections
 -ServerGUI [java and form]
+-CustomOutputStream [common]
 
 ClientSide classes:
 -Client
 -ClientGUI [java and form]
+-CustomOutputStream [common]
 
 -----------------------------TAGS-------------------------------
 <SERVER_MSG> usual msg but from server
@@ -25,8 +27,8 @@ ClientSide classes:
 
 ----Tags in clientHandler [read => send response]
 
-<C_NAME> => <SERVER_C_NAME>&" + "Name already taken"
-         => <SERVER_C_NAME>&" + "Name Accepted"
+<C_NAME> => <SERVER_C_NAME>&" + "Name already taken"  +
+         => <SERVER_C_NAME>&" + "Name Accepted"       +
             broadcast(<SERVER_MSG>)
 <MSG> => <MSG>
       => broadcast(<MSG>)
