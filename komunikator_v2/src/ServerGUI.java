@@ -63,8 +63,9 @@ public class ServerGUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 int serverPort = (int) spinnerPort.getValue();
+                String serverIp = textFieldServerIp.getText();
                 try {
-                    server.startServer(serverPort);
+                    server.startServer(serverPort,serverIp);
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
@@ -119,6 +120,7 @@ public class ServerGUI {
         turnOffServerButton.setEnabled(ifServerRunning);
         listCU.setEnabled(ifServerRunning);
         //disable if server is Running
+        textFieldServerIp.setEditable(!ifServerRunning);
         spinnerPort.setEnabled(!ifServerRunning);
         startServerButton.setEnabled(!ifServerRunning);
     }

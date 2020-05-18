@@ -11,7 +11,7 @@ public class Client {
     InetAddress serverInetAddress;
 
     int clientPort;
-    //String clientIp;
+    String clientIp;
     private byte[] oktetyIp;
     InetAddress clientInetAddress;
 
@@ -38,8 +38,8 @@ public class Client {
 
         avUsers = new HashMap<>();
 
-        this.oktetyIp = InetAddress.getLocalHost().getAddress();
-        this.clientInetAddress = InetAddress.getByAddress(new byte[]{ oktetyIp[0],oktetyIp[1], oktetyIp[2], oktetyIp[3]});
+        //this.oktetyIp = InetAddress.getLocalHost().getAddress();
+        //this.clientInetAddress = InetAddress.getByAddress(new byte[]{ oktetyIp[0],oktetyIp[1], oktetyIp[2], oktetyIp[3]});
 
         socket = new Socket();
         socket.setReuseAddress(true);
@@ -50,7 +50,7 @@ public class Client {
         //serverIp = sIp;
         //serverPort = sPort;
         serverInetAddress = InetAddress.getByName(serverIp);
-
+        clientInetAddress = InetAddress.getByName(clientIp);
         //clientPort = localPort;
 
         socket.bind(new InetSocketAddress(clientInetAddress,clientPort));

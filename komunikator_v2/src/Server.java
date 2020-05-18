@@ -29,15 +29,17 @@ public class Server extends Thread{
         this.s = new Socket();
         clientNamesHM = new HashMap<>();
         clientHandlersHM = new HashMap<>();
-        this.oktetyIP = InetAddress.getLocalHost().getAddress();
-        this.inetAddress = InetAddress.getByAddress(new byte[]{ oktetyIP[0],oktetyIP[1], oktetyIP[2], oktetyIP[3]});
-        this.serverIP = inetAddress.toString().substring(1);
+        //this.oktetyIP = InetAddress.getLocalHost().getAddress();
+        //this.inetAddress = InetAddress.getByAddress(new byte[]{ oktetyIP[0],oktetyIP[1], oktetyIP[2], oktetyIP[3]});
+        //this.serverIP = inetAddress.toString().substring(1);
     }
 
 
-    public void startServer(int serverPortVar) throws IOException {
+    public void startServer(int serverPortVar, String serverIp) throws IOException {
         this.serverPort = serverPortVar;
-        ss = new ServerSocket(serverPort);
+        this.serverIP = serverIp;
+        this.inetAddress = InetAddress.getByName(serverIP);
+        ss = new ServerSocket(serverPort,50,inetAddress);
         acceptingConnections = new AcceptingConnections(this);
         acceptingConnections.start();
         this.isRunning = true;

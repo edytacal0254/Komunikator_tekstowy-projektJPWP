@@ -30,6 +30,7 @@ public class ClientGUI {
 
     private JPanel panelAvUsers;
     private JList listAvUsers;
+    private JTextField textFieldClientIp;
 
     private static Client client;
 
@@ -83,6 +84,7 @@ public class ClientGUI {
                 clearGUI();
                 client.serverIp = textFieldServerIp.getText();
                 client.serverPort = (int) spinnerServerPort.getValue();
+                client.clientIp = textFieldClientIp.getText();
                 client.clientPort = (int) spinnerYourPort.getValue();
                 client.clientName = textFieldYourName.getText();
 
