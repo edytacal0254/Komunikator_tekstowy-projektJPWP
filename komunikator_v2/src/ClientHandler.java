@@ -88,6 +88,7 @@ public class ClientHandler implements Runnable{
                 }
 
                 received = dis.readUTF();
+                System.out.println(received);
 
                 StringTokenizer st = new StringTokenizer(received, "&");
                 String tag1 = st.nextToken();
@@ -97,11 +98,11 @@ public class ClientHandler implements Runnable{
                         String tmpName = st.nextToken();
 
                         if (Server.clientNamesHM.containsValue(tmpName)) {
-                            dos.writeUTF("<SERVER_C_NAME>&" + "Name already taken");
+                            dos.writeUTF("<SERVER_C_NAME>&" + "Name already taken.");
                         } else {
                             this.name = tmpName;
                             Server.clientNamesHM.put(clientNumber, name);
-                            dos.writeUTF("<SERVER_C_NAME>&" + "Name Accepted");
+                            dos.writeUTF("<SERVER_C_NAME>&" + "Name accepted.");
                             server.sendUserList(); //wysyłamy wszystkim listę użytkowników
                             server.broadcast("<SERVER_MSG>&" + tmpName + " joined chat.");
                             System.out.println("Client nr. " + clientNumber + " set name as : " + tmpName);
@@ -110,7 +111,8 @@ public class ClientHandler implements Runnable{
 
                     case "<MSG>":
                         Integer nrRecipent = Integer.parseInt(st.nextToken());
-                        String message = st.nextToken();
+                        String message = st.
+                                nextToken();
 
                         if (nrRecipent == 0) {      ///wiad. dla wszystkich
                             try {
@@ -143,13 +145,19 @@ public class ClientHandler implements Runnable{
                 }
             } catch (IOException e) {
                 System.out.println("Error in run()[while] in ClientHandler of client "+clientNumber);
+                try {
+                    disconnectUser();
+                } catch (IOException ex) {
+                    System.out.println("Error in run()[while] in ClientHandler of client "+clientNumber + " [disconecting user]");
+                    //ex.printStackTrace();
+                }
                 //e.printStackTrace();
             }
             if(!isLoggedIn){
                 try {
                     disconnectUser();
                 } catch (IOException e) {
-                    System.out.println("Error in run()[if] in ClientHandler of client "+clientNumber);
+                    System.out.println("Error in run()[if] in ClientHandler of client "+clientNumber + " [disconecting user]");
                     //e.printStackTrace();
                 }
             }

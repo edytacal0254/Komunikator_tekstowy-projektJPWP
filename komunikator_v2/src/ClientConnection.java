@@ -7,9 +7,6 @@ public class ClientConnection {
     Socket socket;
     boolean isConnected;
 
-    DataInputStream dis;
-    DataOutputStream dos;
-
     Thread sendMsgT;
     Thread readMsgT;
 
@@ -18,6 +15,11 @@ public class ClientConnection {
         this.socket = s;
         this.readMsgT = readMsgThread;
         this.sendMsgT = sendMsgThread;
+
+        this.readMsgT.start();
+        this.sendMsgT.start();
+
+
     }
 
     public void close() throws IOException {

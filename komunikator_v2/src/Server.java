@@ -20,6 +20,7 @@ public class Server extends Thread{
 
     public static HashMap<Integer,String> clientNamesHM;
     public static HashMap<Integer, ClientHandler> clientHandlersHM;
+    int userListNew = 0;
 
     int clientNr = 1; //jak zero to ALL
 
@@ -72,15 +73,16 @@ public class Server extends Thread{
             userListS.setLength(userListS.length() - 1); //usuwanie zbędnego delimitera
             broadcast("<USER_LIST>&" + userListS.toString());
         }
+        userListNew++;
     }
 
     public void kickOutUser(int clientNumber) throws IOException {
         clientHandlersHM.get(clientNumber).getDos().writeUTF("<KICKED_OUT>");
-        clientHandlersHM.get(clientNumber).disconnectUser();
         System.out.println("Client nr.: " + clientNumber + " was kicked out of server.");
         if(!clientNamesHM.get(clientNumber).isEmpty()) {
             broadcast("<SERVER_MSG>&" + clientNamesHM.get(clientNumber) + " was kicked out of server.");
         }
+        clientHandlersHM.get(clientNumber).disconnectUser();
     }
 
 

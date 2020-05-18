@@ -11,7 +11,7 @@ public class Client {
     InetAddress serverInetAddress;
 
     int clientPort;
-    String clientIp;
+    //String clientIp;
     private byte[] oktetyIp;
     InetAddress clientInetAddress;
 
@@ -25,8 +25,9 @@ public class Client {
     boolean ifServerAcceptedName;
 
     HashMap<String,Integer> avUsers;
+    int userListNew = 0;
     String newMsg;
-    boolean toSend = false;
+    volatile boolean toSend;
     int recipentNr;
     String recipentName;
 
@@ -44,12 +45,13 @@ public class Client {
         socket.setReuseAddress(true);
     }
 
-    public void startClient(String sIp, int sPort, int localPort) throws IOException {
-        serverIp = sIp;
-        serverPort = sPort;
+    public void startClient() throws IOException {
+        //String sIp, int sPort, int localPort
+        //serverIp = sIp;
+        //serverPort = sPort;
         serverInetAddress = InetAddress.getByName(serverIp);
 
-        clientPort = localPort;
+        //clientPort = localPort;
 
         socket.bind(new InetSocketAddress(clientInetAddress,clientPort));
         socket.connect(new InetSocketAddress(serverInetAddress,serverPort));
@@ -59,14 +61,16 @@ public class Client {
 
         isConnected = true;
 
+
         Thread sendMessageT = new Thread(new Runnable() {
             @Override
             public void run() {
-
                 while(isConnected){
                     if (toSend){
+                        System.out.println("3");
                         try {
                             String[] prepMsg = normalizeMsg(newMsg);
+                            setRecipentNr(recipentName);
                             for(String partMsg : prepMsg) {
                                 dos.writeUTF("<MSG>&" + recipentNr + "&" + partMsg);
 
@@ -76,6 +80,7 @@ public class Client {
                                     System.out.println(clientName + " -> " + avUsers.get(recipentNr) + " : " + partMsg);
                                 }
                             }
+                            System.out.println("msg sended");
                             toSend=false;
 
                         } catch (IOException e) {
@@ -91,6 +96,7 @@ public class Client {
             public void run() {
                 while (isConnected) {
                     try {
+
                         String received = dis.readUTF();
                         StringTokenizer st = new StringTokenizer(received,"&");
                         String tag1 = st.nextToken();
@@ -115,6 +121,7 @@ public class Client {
                                 }else if(tmp.equals("Name already taken.")){
                                     clientConnection.close();
                                 }
+                                break;
 
                             case "<SERVER_MSG>":
                                 tmp = st.nextToken();
@@ -124,6 +131,7 @@ public class Client {
                             case "<KICKED_OUT>":
                                 System.out.println("You were kicked out of server.");
                                 clientConnection.close();
+                                break;
 
                             case "<SERVER_CLOSED>":
                                 System.out.println("Server closed.");
@@ -136,18 +144,26 @@ public class Client {
                                     tmp = tmp.concat(st.nextToken());
                                 }
                                 System.out.println("<ERROR_WHILE_PROCESSING_MSG> " + tmp);
+                                break;
                         }
 
                     } catch (IOException e) {
-
-                        e.printStackTrace();
+                        try {
+                            isConnected = false;
+                            clientConnection.close();
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
+                        System.out.println("Server unexpectedly closed.");
+                        //e.printStackTrace();
                     }
                 }
 
             }
         });
 
-        ClientConnection clientConnection = new ClientConnection(socket,readMessageT,sendMessageT);
+        clientConnection = new ClientConnection(socket,readMessageT,sendMessageT);
+        askForName();
     }
 
     void askForName() throws IOException {
@@ -161,6 +177,9 @@ public class Client {
     void loggingOut() throws IOException {
         System.out.println("Logging out.");
         dos.writeUTF("<LOGOUT>");
+        ifServerAcceptedName = false;
+        isConnected = false;
+        clientConnection.close();
     }
 
     public String checkIfNameIsValid (String testedName){
@@ -203,6 +222,7 @@ public class Client {
             String[] tmpUser = avUs.nextToken().split("=");
             avUsers.put(tmpUser[1],Integer.parseInt(tmpUser[0]));
         }
+        userListNew++;
     }
 
 

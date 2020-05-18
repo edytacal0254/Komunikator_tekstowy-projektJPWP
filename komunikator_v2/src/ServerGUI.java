@@ -1,4 +1,6 @@
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -97,6 +99,16 @@ public class ServerGUI {
             }
         });
 
+        listCU.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (!listCU.isSelectionEmpty()){
+                    StringTokenizer tmpSt = new StringTokenizer((String) listCU.getSelectedValue(), " : ");
+                    selectedUser = Integer.parseInt(tmpSt.nextToken());
+
+                }
+            }
+        });
 
     }
 
@@ -114,21 +126,26 @@ public class ServerGUI {
     public void odswiez(){
         enableComponents();
 
-        defaultListModel.clear();
-        for (int cNr: server.clientHandlersHM.keySet()){
-            if (server.clientNamesHM.containsKey(cNr)){
-                defaultListModel.addElement(cNr + " : " + server.clientNamesHM.get(cNr));
-            }else {
-                defaultListModel.addElement(cNr + " :  <not_setted>" );
+        if (server.userListNew>0) {
+            defaultListModel.removeAllElements();
+            for (int cNr : server.clientHandlersHM.keySet()) {
+                System.out.println("reallu");
+                if (server.clientNamesHM.containsKey(cNr)) {
+                    defaultListModel.addElement(cNr + " : " + server.clientNamesHM.get(cNr));
+                } else {
+                    defaultListModel.addElement(cNr + " :  <not_setted>");
+                }
             }
+            listCU.setModel(defaultListModel);
+            server.userListNew--;
         }
 
-        if (listCU.isSelectionEmpty()){
-            selectedUser = 0;
+        if(listCU.isSelectionEmpty()){
+            kickOutUserButton.setEnabled(false);
         }else {
-            StringTokenizer tmpSt = new StringTokenizer((String) listCU.getSelectedValue(), " : ");
-            selectedUser = Integer.parseInt(tmpSt.nextToken());
+            kickOutUserButton.setEnabled(true);
         }
+
 
         if(textAreaServerLogs.getText().length()>0) {
             textAreaServerLogs.setCaretPosition(textAreaServerLogs.getText().length() - 1); ///auto scrolling
