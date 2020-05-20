@@ -23,10 +23,11 @@ public class ClientConnection {
     }
 
     public void close() throws IOException {
+        System.out.println("<CLIENT> Connection closed.");
         isConnected = false;
         readMsgT.interrupt();
         sendMsgT.interrupt();
         socket.close();
-        System.out.println("<CLIENT> Connection closed.");
+
     }
 }

@@ -88,7 +88,6 @@ public class ClientHandler implements Runnable{
                 }
 
                 received = dis.readUTF();
-                System.out.println(received);
 
                 StringTokenizer st = new StringTokenizer(received, "&");
                 String tag1 = st.nextToken();

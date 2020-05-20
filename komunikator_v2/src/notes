@@ -1,6 +1,3 @@
-----------------------------ToDo------------------------------
-Rewrite Client [ALL]
-Testing
 
 ---------------------------CLASSES-----------------------------
 ServerSide classes:
@@ -12,6 +9,7 @@ ServerSide classes:
 
 ClientSide classes:
 -Client
+-ClientConnection
 -ClientGUI [java and form]
 -CustomOutputStream [common]
 

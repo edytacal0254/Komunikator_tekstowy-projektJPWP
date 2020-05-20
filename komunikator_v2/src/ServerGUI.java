@@ -7,6 +7,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.StringTokenizer;
 
@@ -34,7 +35,7 @@ public class ServerGUI {
     int lowerLimitPort = 49152;
     int upperLimitPort = 50000;
 
-    public ServerGUI() throws UnknownHostException {
+    public ServerGUI() throws UnknownHostException, SocketException {
         server = new Server();
 
         Timer timer = new Timer(100, new ActionListener() {
@@ -48,12 +49,13 @@ public class ServerGUI {
 
         PrintStream printStream = new PrintStream(new CustomOutputStream(textAreaServerLogs));
         System.setOut(printStream);
-        //System.setErr(printStream); errors to console
+        //System.setErr(printStream); errors should remain in console
 
         textFieldServerIp.setEditable(false);
         textFieldServerIp.setText(server.serverIP);
         textAreaServerLogs.setEditable(false);
 
+        textAreaServerLogs.setLineWrap(true);
         textAreaServerLogs.setWrapStyleWord(true);
 
         SpinnerNumberModel spinnerNumberModel = new SpinnerNumberModel(49500,lowerLimitPort,upperLimitPort,1);
@@ -131,7 +133,6 @@ public class ServerGUI {
         if (server.userListNew>0) {
             defaultListModel.removeAllElements();
             for (int cNr : server.clientHandlersHM.keySet()) {
-                System.out.println("reallu");
                 if (server.clientNamesHM.containsKey(cNr)) {
                     defaultListModel.addElement(cNr + " : " + server.clientNamesHM.get(cNr));
                 } else {

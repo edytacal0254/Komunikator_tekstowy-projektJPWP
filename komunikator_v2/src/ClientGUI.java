@@ -20,7 +20,6 @@ public class ClientGUI {
     private JTextField textFieldYourName;
     private JButton connectToServerButton;
     private JButton logoutButton;
-    private JButton helpButton;
 
     private JPanel panelChat;
     private JTextArea textAreaChat;
@@ -64,7 +63,7 @@ public class ClientGUI {
 
         PrintStream out = new PrintStream( new CustomOutputStream( textAreaChat ) );
         System.setOut( out );
-        //System.setErr( out );
+        //System.setErr( out ); errors should remain in console
         System.out.println( "Welcome" );
 
         SpinnerNumberModel spinnerNM1 = new SpinnerNumberModel(49500,lowerLimitPort,upperLimitPort,1);
@@ -73,6 +72,8 @@ public class ClientGUI {
         SpinnerNumberModel spinnerNM2 = new SpinnerNumberModel(49501,lowerLimitPort,upperLimitPort,1);
         spinnerYourPort.setModel(spinnerNM2);
 
+        textAreaMsg.setLineWrap(true);
+        textAreaChat.setLineWrap(true);
         textAreaMsg.setWrapStyleWord(true);
         textAreaChat.setWrapStyleWord(true);
 
@@ -123,7 +124,6 @@ public class ClientGUI {
                 client.recipentName = textFieldRecipent.getText();
                 client.toSend  = true;
                 textAreaMsg.setText("");
-                System.out.println(client.toSend);
             }
         });
 
@@ -142,9 +142,12 @@ public class ClientGUI {
 
         if(waiting){
             howLong++;
-            System.out.println("counting");
             if(howLong==waitForResponse){
-                client.clientConnection.close();
+                try {
+                    client.clientConnection.close();
+                }catch (NullPointerException e){
+
+                }
                 waiting = false;
                 howLong = 0;
                 System.out.println("<CLIENT> Server is not responding. Are you sure you provided correct parameters?");
@@ -209,6 +212,7 @@ public class ClientGUI {
         logoutButton.setEnabled(connected);
 
         //if connected==true disable
+        textFieldClientIp.setEditable((!connected));
         connectToServerButton.setEnabled(!connected);
         textFieldServerIp.setEditable(!connected);
         spinnerServerPort.setEnabled(!connected);
@@ -229,16 +233,20 @@ public class ClientGUI {
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                if(client.clientConnection.isConnected){
-                    if(JOptionPane.showConfirmDialog(null,"Are you sure?") == JOptionPane.OK_OPTION) {
-                        try {
-                            client.loggingOut();
-                        } catch (IOException ex) {
-                            ex.printStackTrace();
+                try {
+                    if (client.clientConnection.isConnected) {
+                        if (JOptionPane.showConfirmDialog(null, "Are you sure?") == JOptionPane.OK_OPTION) {
+                            try {
+                                client.loggingOut();
+                            } catch (IOException ex) {
+                                ex.printStackTrace();
+                            }
+                            System.exit(0);
                         }
+                    } else {
                         System.exit(0);
                     }
-                }else{
+                }catch (NullPointerException e2){
                     System.exit(0);
                 }
             }
