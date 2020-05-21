@@ -56,24 +56,24 @@ public class ClientHandler implements Runnable{
     }
 
     public ClientHandler(Socket s, int clientNumber, DataInputStream dis, DataOutputStream dos, Server server) {
-        this.s = s;
-        this.clientNumber = clientNumber;
-        this.dis = dis;
-        this.dos = dos;
-        this.server = server;
-        this.isLoggedIn = true;
-        this.server = server;
+        this.setS(s);
+        this.setClientNumber(clientNumber);
+        this.setDis(dis);
+        this.setDos(dos);
+        this.setServer(server);
+        this.setLoggedIn(true);
+        this.setServer(server);
 
         System.out.println("Created ClientHandler for client nr. " + clientNumber);
     }
 
     public void disconnectUser() throws IOException {
-        this.isLoggedIn = false;
-        Server.clientNamesHM.remove(clientNumber);
-        Server.clientHandlersHM.remove(clientNumber);
+        this.setLoggedIn(false);
+        Server.getClientNamesHM().remove(getClientNumber());
+        Server.getClientHandlersHM().remove(getClientNumber());
 
-        this.s.close();
-        server.sendUserList();
+        this.getS().close();
+        getServer().sendUserList();
     }
 
 
@@ -81,13 +81,13 @@ public class ClientHandler implements Runnable{
     public void run() {
         String received;
 
-        while (server.isRunning && isLoggedIn){
+        while (getServer().isRunning() && isLoggedIn()){
             try {
-                if ((!s.isConnected()) || s.isClosed()) {
-                    isLoggedIn = false;
+                if ((!getS().isConnected()) || getS().isClosed()) {
+                    setLoggedIn(false);
                 }
 
-                received = dis.readUTF();
+                received = getDis().readUTF();
 
                 StringTokenizer st = new StringTokenizer(received, "&");
                 String tag1 = st.nextToken();
@@ -96,15 +96,15 @@ public class ClientHandler implements Runnable{
                     case "<C_NAME>":
                         String tmpName = st.nextToken();
 
-                        if (Server.clientNamesHM.containsValue(tmpName)) {
-                            dos.writeUTF("<SERVER_C_NAME>&" + "Name already taken.");
+                        if (Server.getClientNamesHM().containsValue(tmpName)) {
+                            getDos().writeUTF("<SERVER_C_NAME>&" + "Name already taken.");
                         } else {
-                            this.name = tmpName;
-                            Server.clientNamesHM.put(clientNumber, name);
-                            dos.writeUTF("<SERVER_C_NAME>&" + "Name accepted.");
-                            server.sendUserList(); //wysyłamy wszystkim listę użytkowników
-                            server.broadcast("<SERVER_MSG>&" + tmpName + " joined chat.");
-                            System.out.println("Client nr. " + clientNumber + " set name as : " + tmpName);
+                            this.setName(tmpName);
+                            Server.getClientNamesHM().put(getClientNumber(), getName());
+                            getDos().writeUTF("<SERVER_C_NAME>&" + "Name accepted.");
+                            getServer().sendUserList(); //wysyłamy wszystkim listę użytkowników
+                            getServer().broadcast("<SERVER_MSG>&" + tmpName + " joined chat.");
+                            System.out.println("Client nr. " + getClientNumber() + " set name as : " + tmpName);
                         }
                         break;
 
@@ -115,13 +115,13 @@ public class ClientHandler implements Runnable{
 
                         if (nrRecipent == 0) {      ///wiad. dla wszystkich
                             try {
-                                server.broadcast("<MSG>&" + this.name + " : " + message);
+                                getServer().broadcast("<MSG>&" + this.getName() + " : " + message);
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
                         } else {
                             try {
-                                Server.clientHandlersHM.get(nrRecipent).dos.writeUTF("<MSG>&" + this.name + " -> " + Server.clientNamesHM.get(nrRecipent) + " : " + message);
+                                Server.getClientHandlersHM().get(nrRecipent).getDos().writeUTF("<MSG>&" + this.getName() + " -> " + Server.getClientNamesHM().get(nrRecipent) + " : " + message);
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -129,9 +129,9 @@ public class ClientHandler implements Runnable{
                         break;
 
                     case "<LOGOUT>":
-                        this.isLoggedIn = false;
-                        server.broadcast("<SERVER_MSG>&" + this.name + " left chat.");
-                        System.out.println("Client nr.: " + clientNumber + " left server.");
+                        this.setLoggedIn(false);
+                        getServer().broadcast("<SERVER_MSG>&" + this.getName() + " left chat.");
+                        System.out.println("Client nr.: " + getClientNumber() + " left server.");
                         break;
 
                     default:
@@ -143,20 +143,20 @@ public class ClientHandler implements Runnable{
 
                 }
             } catch (IOException e) {
-                System.out.println("Error in run()[while] in ClientHandler of client "+clientNumber);
+                System.out.println("Error in run()[while] in ClientHandler of client "+ getClientNumber());
                 try {
                     disconnectUser();
                 } catch (IOException ex) {
-                    System.out.println("Error in run()[while] in ClientHandler of client "+clientNumber + " [disconecting user]");
+                    System.out.println("Error in run()[while] in ClientHandler of client "+ getClientNumber() + " [disconecting user]");
                     //ex.printStackTrace();
                 }
                 //e.printStackTrace();
             }
-            if(!isLoggedIn){
+            if(!isLoggedIn()){
                 try {
                     disconnectUser();
                 } catch (IOException e) {
-                    System.out.println("Error in run()[if] in ClientHandler of client "+clientNumber + " [disconecting user]");
+                    System.out.println("Error in run()[if] in ClientHandler of client "+ getClientNumber() + " [disconecting user]");
                     //e.printStackTrace();
                 }
             }
@@ -165,4 +165,11 @@ public class ClientHandler implements Runnable{
     }
 
 
+    public Server getServer() {
+        return server;
+    }
+
+    public void setServer(Server server) {
+        this.server = server;
+    }
 }

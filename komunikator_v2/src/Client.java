@@ -6,82 +6,74 @@ import java.util.HashMap;
 import java.util.StringTokenizer;
 
 public class Client {
-    int serverPort;
-    String serverIp;
-    InetAddress serverInetAddress;
+    private int serverPort;
+    private String serverIp;
+    private InetAddress serverInetAddress;
 
-    int clientPort;
-    String clientIp;
-    private byte[] oktetyIp;
-    InetAddress clientInetAddress;
+    private int clientPort;
+    private String clientIp;
+    private InetAddress clientInetAddress;
 
-    Socket socket;
-    ClientConnection clientConnection;
-    boolean isConnected;
-    DataInputStream dis;
-    DataOutputStream dos;
+    private Socket socket;
+    private ClientConnection clientConnection;
+    private boolean isConnected;
+    private DataInputStream dis;
+    private DataOutputStream dos;
 
-    String clientName;
-    boolean ifServerAcceptedName;
+    private String clientName;
+    private boolean ifServerAcceptedName;
 
-    HashMap<String,Integer> avUsers;
-    int userListNew = 0;
-    String newMsg;
-    volatile boolean toSend;
-    int recipentNr;
-    String recipentName;
+    private HashMap<String,Integer> avUsers;
+    private int userListNew = 0;
+    private String newMsg;
+    private volatile boolean toSend;
+    private int recipentNr;
+    private String recipentName;
 
-    public Client() throws UnknownHostException, SocketException {
-        this.ifServerAcceptedName = false;
-        this.isConnected = false;
-        this.toSend = false;
+    public Client() {
+        this.setIfServerAcceptedName(false);
+        this.setConnected(false);
+        this.setToSend(false);
 
-        avUsers = new HashMap<>();
-
-        //this.oktetyIp = InetAddress.getLocalHost().getAddress();
-        //this.clientInetAddress = InetAddress.getByAddress(new byte[]{ oktetyIp[0],oktetyIp[1], oktetyIp[2], oktetyIp[3]});
+        setAvUsers(new HashMap<>());
 
     }
 
     public void startClient() throws IOException {
         try {
-            //String sIp, int sPort, int localPort
-            //serverIp = sIp;
-            //serverPort = sPort;
-            serverInetAddress = InetAddress.getByName(serverIp);
-            clientInetAddress = InetAddress.getByName(clientIp);
-            //clientPort = localPort;
+            setServerInetAddress(InetAddress.getByName(getServerIp()));
+            setClientInetAddress(InetAddress.getByName(getClientIp()));
 
-            socket = new Socket();
-            socket.setReuseAddress(true);
+            setSocket(new Socket());
+            getSocket().setReuseAddress(true);
 
-            socket.bind(new InetSocketAddress(clientInetAddress, clientPort));
-            socket.connect(new InetSocketAddress(serverInetAddress, serverPort));
+            getSocket().bind(new InetSocketAddress(getClientInetAddress(), getClientPort()));
+            getSocket().connect(new InetSocketAddress(getServerInetAddress(), getServerPort()));
 
-            dis = new DataInputStream(socket.getInputStream());
-            dos = new DataOutputStream(socket.getOutputStream());
+            setDis(new DataInputStream(getSocket().getInputStream()));
+            setDos(new DataOutputStream(getSocket().getOutputStream()));
 
-            isConnected = true;
+            setConnected(true);
 
 
             Thread sendMessageT = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    while (isConnected) {
-                        if (toSend) {
+                    while (isConnected()) {
+                        if (isToSend()) {
                             try {
-                                String[] prepMsg = normalizeMsg(newMsg);
-                                setRecipentNr(recipentName);
+                                String[] prepMsg = normalizeMsg(getNewMsg());
+                                setRecipentNr(getRecipentName());
                                 for (String partMsg : prepMsg) {
-                                    dos.writeUTF("<MSG>&" + recipentNr + "&" + partMsg);
+                                    getDos().writeUTF("<MSG>&" + getRecipentNr() + "&" + partMsg);
 
-                                    if (recipentNr == 0) {
+                                    if (getRecipentNr() == 0) {
                                         //System.out.println(clientName + " : " + partMsg);
                                     } else {
-                                        System.out.println(clientName + " -> " + recipentName + " : " + partMsg);
+                                        System.out.println(getClientName() + " -> " + getRecipentName() + " : " + partMsg);
                                     }
                                 }
-                                toSend = false;
+                                setToSend(false);
 
                             } catch (IOException e) {
                                 e.printStackTrace();
@@ -94,10 +86,10 @@ public class Client {
             Thread readMessageT = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    while (isConnected) {
+                    while (isConnected()) {
                         try {
 
-                            String received = dis.readUTF();
+                            String received = getDis().readUTF();
                             StringTokenizer st = new StringTokenizer(received, "&");
                             String tag1 = st.nextToken();
                             String tmp;
@@ -117,9 +109,9 @@ public class Client {
                                     tmp = st.nextToken();
                                     System.out.println("<SERVER> " + tmp);
                                     if (tmp.equals("Name accepted.")) {
-                                        ifServerAcceptedName = true;
+                                        setIfServerAcceptedName(true);
                                     } else if (tmp.equals("Name already taken.")) {
-                                        clientConnection.close();
+                                        getClientConnection().close();
                                     }
                                     break;
 
@@ -130,12 +122,12 @@ public class Client {
 
                                 case "<KICKED_OUT>":
                                     System.out.println("You were kicked out of server.");
-                                    clientConnection.close();
+                                    getClientConnection().close();
                                     break;
 
                                 case "<SERVER_CLOSED>":
                                     System.out.println("Server closed.");
-                                    clientConnection.close();
+                                    getClientConnection().close();
                                     break;
 
                                 default:
@@ -149,8 +141,8 @@ public class Client {
 
                         } catch (IOException e) {
                             try {
-                                isConnected = false;
-                                clientConnection.close();
+                                setConnected(false);
+                                getClientConnection().close();
                             } catch (IOException ex) {
                                 System.out.println("Server unexpectedly closed.");
                                 ex.printStackTrace();
@@ -163,7 +155,7 @@ public class Client {
                 }
             });
 
-            clientConnection = new ClientConnection(socket, readMessageT, sendMessageT);
+            setClientConnection(new ClientConnection(getSocket(), readMessageT, sendMessageT));
             askForName();
         }catch (BindException e2){
             System.out.println("That port is either being used or in TIME_OUT. Use different port.");
@@ -175,19 +167,19 @@ public class Client {
     }
 
     void askForName() throws IOException {
-        if(checkIfNameIsValid(clientName).equals("true")) {
-            dos.writeUTF("<C_NAME>&" + clientName);
+        if(checkIfNameIsValid(getClientName()).equals("true")) {
+            getDos().writeUTF("<C_NAME>&" + getClientName());
         }else {
-            System.out.println(checkIfNameIsValid(clientName));
+            System.out.println(checkIfNameIsValid(getClientName()));
         }
     }
 
     void loggingOut() throws IOException {
         System.out.println("Logging out.");
-        dos.writeUTF("<LOGOUT>");
-        ifServerAcceptedName = false;
-        isConnected = false;
-        clientConnection.close();
+        getDos().writeUTF("<LOGOUT>");
+        setIfServerAcceptedName(false);
+        setConnected(false);
+        getClientConnection().close();
     }
 
     public String checkIfNameIsValid (String testedName){
@@ -195,8 +187,6 @@ public class Client {
             return "Name should be at least 5 symbols long and not longer than 20 symbols.";
         }else if(testedName.matches("[^A-Za-z0-9._-]+")) {
             return "Name contains forbidden symbols.";
-        }else if(testedName.equals("ALL")){
-            return "You can not set your name as ALL";
         }else {
             return "true";
         }
@@ -217,24 +207,174 @@ public class Client {
 
     public void setRecipentNr(String recipentName) {
         if (recipentName == null) {
-            this.recipentNr = 0;
+            this.setRecipentNr(0);
         } else {
-            this.recipentNr = avUsers.get(recipentName);
+            this.setRecipentNr(getAvUsers().get(recipentName));
         }
     }
 
     public void setAvUsers(String userList) {
-        avUsers.clear();
-        avUsers.put("ALL",0);
+        getAvUsers().clear();
+        getAvUsers().put("ALL",0);
 
         StringTokenizer avUs = new StringTokenizer(userList,";");
         while (avUs.hasMoreTokens()){
             String[] tmpUser = avUs.nextToken().split("=");
-            avUsers.put(tmpUser[1],Integer.parseInt(tmpUser[0]));
+            getAvUsers().put(tmpUser[1],Integer.parseInt(tmpUser[0]));
         }
-        userListNew++;
+        setUserListNew(getUserListNew() + 1);
     }
 
 
+    public int getServerPort() {
+        return serverPort;
+    }
 
+    public void setServerPort(int serverPort) {
+        this.serverPort = serverPort;
+    }
+
+    public String getServerIp() {
+        return serverIp;
+    }
+
+    public void setServerIp(String serverIp) {
+        this.serverIp = serverIp;
+    }
+
+    public InetAddress getServerInetAddress() {
+        return serverInetAddress;
+    }
+
+    public void setServerInetAddress(InetAddress serverInetAddress) {
+        this.serverInetAddress = serverInetAddress;
+    }
+
+    public int getClientPort() {
+        return clientPort;
+    }
+
+    public void setClientPort(int clientPort) {
+        this.clientPort = clientPort;
+    }
+
+    public String getClientIp() {
+        return clientIp;
+    }
+
+    public void setClientIp(String clientIp) {
+        this.clientIp = clientIp;
+    }
+
+    public InetAddress getClientInetAddress() {
+        return clientInetAddress;
+    }
+
+    public void setClientInetAddress(InetAddress clientInetAddress) {
+        this.clientInetAddress = clientInetAddress;
+    }
+
+    public Socket getSocket() {
+        return socket;
+    }
+
+    public void setSocket(Socket socket) {
+        this.socket = socket;
+    }
+
+    public ClientConnection getClientConnection() {
+        return clientConnection;
+    }
+
+    public void setClientConnection(ClientConnection clientConnection) {
+        this.clientConnection = clientConnection;
+    }
+
+    public boolean isConnected() {
+        return isConnected;
+    }
+
+    public void setConnected(boolean connected) {
+        isConnected = connected;
+    }
+
+    public DataInputStream getDis() {
+        return dis;
+    }
+
+    public void setDis(DataInputStream dis) {
+        this.dis = dis;
+    }
+
+    public DataOutputStream getDos() {
+        return dos;
+    }
+
+    public void setDos(DataOutputStream dos) {
+        this.dos = dos;
+    }
+
+    public String getClientName() {
+        return clientName;
+    }
+
+    public void setClientName(String clientName) {
+        this.clientName = clientName;
+    }
+
+    public boolean isIfServerAcceptedName() {
+        return ifServerAcceptedName;
+    }
+
+    public void setIfServerAcceptedName(boolean ifServerAcceptedName) {
+        this.ifServerAcceptedName = ifServerAcceptedName;
+    }
+
+    public HashMap<String, Integer> getAvUsers() {
+        return avUsers;
+    }
+
+    public void setAvUsers(HashMap<String, Integer> avUsers) {
+        this.avUsers = avUsers;
+    }
+
+    public int getUserListNew() {
+        return userListNew;
+    }
+
+    public void setUserListNew(int userListNew) {
+        this.userListNew = userListNew;
+    }
+
+    public String getNewMsg() {
+        return newMsg;
+    }
+
+    public void setNewMsg(String newMsg) {
+        this.newMsg = newMsg;
+    }
+
+    public boolean isToSend() {
+        return toSend;
+    }
+
+    public void setToSend(boolean toSend) {
+        this.toSend = toSend;
+    }
+
+    public int getRecipentNr() {
+        return recipentNr;
+    }
+
+    public void setRecipentNr(int recipentNr) {
+        this.recipentNr = recipentNr;
+    }
+
+    public String getRecipentName() {
+        return recipentName;
+    }
+
+    public void setRecipentName(String recipentName) {
+        this.recipentName = recipentName;
+    }
 }

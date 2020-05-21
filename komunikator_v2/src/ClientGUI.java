@@ -36,7 +36,7 @@ public class ClientGUI {
     int lowerLimitPort = 49152;
     int upperLimitPort = 50000;
 
-    int waitForResponse = 180; //3 min.
+    int waitForResponse = 180;
     int howLong = 0;
     boolean waiting = false;
 
@@ -44,7 +44,7 @@ public class ClientGUI {
     DefaultListModel<String> defaultListModel = new DefaultListModel<>();
     String selectedRecipent = "ALL";
 
-    public ClientGUI() throws SocketException, UnknownHostException {
+    public ClientGUI() {
         client = new Client();
 
         Timer timer = new Timer(100, new ActionListener() {
@@ -83,13 +83,13 @@ public class ClientGUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 clearGUI();
-                client.serverIp = textFieldServerIp.getText();
-                client.serverPort = (int) spinnerServerPort.getValue();
-                client.clientIp = textFieldClientIp.getText();
-                client.clientPort = (int) spinnerYourPort.getValue();
-                client.clientName = textFieldYourName.getText();
+                client.setServerIp(textFieldServerIp.getText());
+                client.setServerPort((int) spinnerServerPort.getValue());
+                client.setClientIp(textFieldClientIp.getText());
+                client.setClientPort((int) spinnerYourPort.getValue());
+                client.setClientName(textFieldYourName.getText());
 
-                if (client.checkIfNameIsValid(client.clientName).equals("true")) {
+                if (client.checkIfNameIsValid(client.getClientName()).equals("true")) {
                     try {
                         client.startClient();
                         waiting = true;
@@ -98,7 +98,7 @@ public class ClientGUI {
                         ex.printStackTrace();
                     }
                 }else{
-                    System.out.println(client.checkIfNameIsValid(client.clientName));
+                    System.out.println(client.checkIfNameIsValid(client.getClientName()));
                 }
             }
         });
@@ -120,9 +120,9 @@ public class ClientGUI {
         buttonSend.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                client.newMsg = textAreaMsg.getText();
-                client.recipentName = textFieldRecipent.getText();
-                client.toSend  = true;
+                client.setNewMsg(textAreaMsg.getText());
+                client.setRecipentName(textFieldRecipent.getText());
+                client.setToSend(true);
                 textAreaMsg.setText("");
             }
         });
@@ -144,7 +144,7 @@ public class ClientGUI {
             howLong++;
             if(howLong==waitForResponse){
                 try {
-                    client.clientConnection.close();
+                    client.getClientConnection().close();
                 }catch (NullPointerException e){
 
                 }
@@ -154,7 +154,7 @@ public class ClientGUI {
             }
         }
 
-        if(client.ifServerAcceptedName && waiting){
+        if(client.isIfServerAcceptedName() && waiting){
             waiting = false;
             howLong = 0;
         }
@@ -170,15 +170,15 @@ public class ClientGUI {
             textAreaChat.setCaretPosition(textAreaChat.getText().length() - 1); ///auto scrolling
         }
 
-        if(client.userListNew>0) {
+        if(client.getUserListNew() >0) {
             defaultListModel.removeAllElements();
-            for (String user : client.avUsers.keySet()) {
-                if (!user.equals(client.clientName)) {
+            for (String user : client.getAvUsers().keySet()) {
+                if (!user.equals(client.getClientName())) {
                     defaultListModel.addElement(user);
                 }
             }
             listAvUsers.setModel(defaultListModel);
-            client.userListNew--;
+            client.setUserListNew(client.getUserListNew() - 1);
         }
     }
 
@@ -198,7 +198,7 @@ public class ClientGUI {
             connected = false;
         }else if (true_false_client.equals("client")){
             try {
-                connected = client.clientConnection.isConnected;
+                connected = client.getClientConnection().isConnected();
             }catch (NullPointerException e){
                 connected = false;
             }
@@ -234,7 +234,7 @@ public class ClientGUI {
             @Override
             public void windowClosing(WindowEvent e) {
                 try {
-                    if (client.clientConnection.isConnected) {
+                    if (client.getClientConnection().isConnected()) {
                         if (JOptionPane.showConfirmDialog(null, "Are you sure?") == JOptionPane.OK_OPTION) {
                             try {
                                 client.loggingOut();

@@ -52,7 +52,7 @@ public class ServerGUI {
         //System.setErr(printStream); errors should remain in console
 
         textFieldServerIp.setEditable(false);
-        textFieldServerIp.setText(server.serverIP);
+        textFieldServerIp.setText(server.getServerIP());
         textAreaServerLogs.setEditable(false);
 
         textAreaServerLogs.setLineWrap(true);
@@ -116,7 +116,7 @@ public class ServerGUI {
     }
 
     public void enableComponents(){
-        boolean ifServerRunning = server.isRunning;
+        boolean ifServerRunning = server.isRunning();
 
         //enable if server is Running
         turnOffServerButton.setEnabled(ifServerRunning);
@@ -130,17 +130,17 @@ public class ServerGUI {
     public void odswiez(){
         enableComponents();
 
-        if (server.userListNew>0) {
+        if (server.getUserListNew() >0) {
             defaultListModel.removeAllElements();
-            for (int cNr : server.clientHandlersHM.keySet()) {
-                if (server.clientNamesHM.containsKey(cNr)) {
-                    defaultListModel.addElement(cNr + " : " + server.clientNamesHM.get(cNr));
+            for (int cNr : server.getClientHandlersHM().keySet()) {
+                if (server.getClientNamesHM().containsKey(cNr)) {
+                    defaultListModel.addElement(cNr + " : " + server.getClientNamesHM().get(cNr));
                 } else {
                     defaultListModel.addElement(cNr + " :  <not_setted>");
                 }
             }
             listCU.setModel(defaultListModel);
-            server.userListNew--;
+            server.setUserListNew(server.getUserListNew() - 1);
         }
 
         if(listCU.isSelectionEmpty()){
@@ -166,7 +166,7 @@ public class ServerGUI {
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                if(server.isRunning){
+                if(server.isRunning()){
                     if (JOptionPane.showConfirmDialog(frame,"Are you sure?") == JOptionPane.OK_OPTION) {
                         //serverClosing();
                         try {
