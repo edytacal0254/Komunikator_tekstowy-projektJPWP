@@ -13,17 +13,17 @@ ClientSide classes:
 -ClientGUI [java and form]
 -CustomOutputStream [common]
 
------------------------------TAGS-------------------------------
+-----------------------------FLAGS-------------------------------
 <SERVER_MSG> usual msg but from server
-<SERVER> msg sterująvy!!!
+<SERVER> reserved
 
-----Tags from server [sending]
+----Flags from server [sending]
 <SERVER_MSG>
 <USER_LIST>
 <KICKED_OUT>
 <SERVER_CLOSED>
 
-----Tags in clientHandler [read => send response]
+----Flags in clientHandler [read => send response]
 
 <C_NAME> => <SERVER_C_NAME>&" + "Name already taken"  +
          => <SERVER_C_NAME>&" + "Name Accepted"       +
@@ -32,5 +32,5 @@ ClientSide classes:
       => broadcast(<MSG>)
 <LOGOUT>  => broadcast(<SERVER_MSG>)
 
-----Tags from client
+----Flags from client
 
